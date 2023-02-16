@@ -1,16 +1,79 @@
+Parking-data-parser loads the data that Where's Parking reads from the vendor API. It is a Lambda in custom-asheville account that is called once a minute.
+
 Where’s Parking is a GitHub pages hosted React app. The app makes a GET request to a static JSON file in an Amazon S3 bucket every 10 seconds to get fresh data.
-
-The JSON file on S3 is created and updated by an AWS lambda function, in the enterprise-asheville account: FormatParkingAndPushToPublicS3
-
-
-(This functionality was previously implemented by a node app running on an on-premises city server. If you are interested in implementing something like the old setup, view the prior versions in this repo's commit history).
-
-Currently, a windows scheduled task is called by the Windows Task Scheduler every 1 minute. It uses the Amazon cli to push the raw file from //coa-parking-app1/Count/webcount.dat into a private S3 bucket. A lambda function then formats the parking deck data into JSON, then writes the JSON data to a file (spaces.json) and pushes that JSON to the public S3 bucket.
 
 UI Code: https://github.com/cityofasheville/wheres-parking (its served from the gh-pages branch)
 
 Where's Parking site: http://cityofasheville.github.io/wheres-parking/
 
-AWS S3 bucket: https://s3.amazonaws.com/asheville-parking-decks/spaces.json
+AWS S3 bucket: https://s3.amazonaws.com/avl-parking-decks/spaces.json
 
 It’s embedded in the City’s website here: http://www.ashevillenc.gov/Departments/ParkingServices/FindParking.aspx
+
+
+
+
+API Key is in secrets manager:
+
+{
+"logix_url": "https://api.streetsoncloud.com/pl1/multi-lot-info",
+"logix_apikey": "xxxxx"
+}
+
+
+
+
+Parking Logix API returns this data:
+https://api.streetsoncloud.com/pl1/multi-lot-info
+``` json
+[
+    [
+        {
+            "location_name": "The Historic Downtown Parking",
+            "geocode": "(29.898319548148,-81.315417134891)",
+            "location_address": "Visitor Information Center",
+            "total_spaces": "1143",
+            "free_spaces": "938",
+            "occupancy": 18
+        }
+    ]
+]
+```
+
+This script writes spaces.json to S3 'avl-parking-decks'
+{
+  "decks": [
+    {
+      "name": "Rankin Ave Garage",
+      "available": "106",
+      "coords": [
+        35.596756575901,
+        -82.554218986941
+      ]
+    },
+    {
+      "name": "Wall Street Garage",
+      "available": "44",
+      "coords": [
+        35.59461343674,
+        -82.556525862251
+      ]
+    },
+    {
+      "name": "Biltmore Ave.Garage",
+      "available": "156",
+      "coords": [
+        35.592322076548,
+        -82.55143519361
+      ]
+    },
+    {
+      "name": "Harrah's Cherokee Center Garage",
+      "available": "189",
+      "coords": [
+        35.596718496827,
+        -82.554197997403
+      ]
+    }
+  ]
+}

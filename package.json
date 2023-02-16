@@ -1,6 +1,26 @@
 {
+  "name": "parking-data-parser",
+  "description": "parking-data-parser loads data for the app Where’s Parking, a GitHub pages hosted React app. The app makes a GET request to a static JSON file in an Amazon S3 bucket every 10 seconds to get fresh data.",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cityofasheville/parking-data-parser.git"
+  },
+  "main": "lambdaFunctions.js",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.271.0",
     "@aws-sdk/client-secrets-manager": "^3.258.0",
-    "node-fetch": "^3.3.0"
-  }
+    "node-fetch": "^2.6.9"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cityofasheville/parking-data-parser/issues"
+  },
+  "homepage": "https://github.com/cityofasheville/parking-data-parser#readme"
 }
