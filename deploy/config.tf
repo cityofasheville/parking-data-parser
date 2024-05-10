@@ -37,7 +37,7 @@ data "archive_file" "${prog_name}_zip" {
 
 # Lambda Function
 resource "aws_lambda_function" "${prog_name}" {
-  description      = "Lambda description" 
+  description      = "Parking Data Parser-Load Vendor Data to S3" 
   function_name    = "${prog_name}"
   role             = aws_iam_role.${prog_name}-role.arn
   handler          = "index.handler"
@@ -53,7 +53,7 @@ resource "aws_lambda_function" "${prog_name}" {
     "coa:department"  = "information-technology"
     "coa:owner"       = "jtwilson@ashevillenc.gov"
     "coa:owner-team"  = "dev"
-    Description   = "Lambda description"
+    Description   = "Parking Data Parser"
   }
 }
 
