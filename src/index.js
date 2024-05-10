@@ -1,10 +1,6 @@
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const fetch = require("node-fetch");
-const getSecrets = require("./getSecrets.js");
-
-// import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-// import fetch from 'node-fetch';
-// import getSecrets from "./getSecrets.js";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import fetch from "node-fetch";
+import getSecrets from "./getSecrets.js";
 
 const s3_client = new S3Client({ region: "us-east-1" });
 
@@ -42,7 +38,7 @@ async function sendToS3(strResult) {
 	}
 }
 
-exports.handler = async (event, context, callback) => {
+export async function handler(event, context, callback) {
 // (async function x() {
 	try {
 		const secrets = await getSecrets("parking_logix");
@@ -64,4 +60,4 @@ exports.handler = async (event, context, callback) => {
 		console.log(error);
 	}
 // })();
-};
+}
