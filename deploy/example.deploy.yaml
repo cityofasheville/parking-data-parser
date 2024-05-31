@@ -1,0 +1,20 @@
+# Required Fields
+lambda_names:
+  production_name: parking-data-parser
+  development_name: parking-data-parser_dev
+description: 'Parking Data Parser-Load Vendor Data to S3'
+region: us-east-1
+state_bucket: xxx
+nodejs_or_python: nodejs
+lambda_options:
+  vpc: 'false'
+  api_gateway: 'false'
+  lambda_url: 'false'
+  secrets_manager: 'true'
+  invoke_lambda: 'false'
+  s3: 'true'
+  ses: 'false'
+sam_deploy: 'false'
+owner_tag: xxx@ashevilenc.gov
+
+
