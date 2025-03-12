@@ -2,13 +2,13 @@ Parking-data-parser loads the data that Where's Parking reads from the vendor AP
 
 Where’s Parking is a GitHub pages hosted React app. The app makes a GET request to a static JSON file in an Amazon S3 bucket every 10 seconds to get fresh data.
 
-UI Code: https://github.com/cityofasheville/wheres-parking (its served from the gh-pages branch)
+UI Code: https://github.com/cityofasheville/wheres-parking (its served using AWS Amplify)
 
-Where's Parking site: http://cityofasheville.github.io/wheres-parking/
+Where's Parking site: https://wheresparking.ashevillenc.gov
 
 AWS S3 bucket: https://s3.amazonaws.com/avl-parking-decks/spaces.json
 
-It’s embedded in the City’s website here: http://www.ashevillenc.gov/Departments/ParkingServices/FindParking.aspx
+It’s embedded in the City’s website here: https://www.ashevillenc.gov/service/find-real-time-parking-in-parking-garages/
 
 
 
@@ -77,3 +77,19 @@ This script writes spaces.json to S3 'avl-parking-decks'
     }
   ]
 }
+
+## Usage
+First run ```npm install```
+
+```package.json``` has these scripts:
+- Test Locally: 
+  - ```npm start``` (or for a Python program: ```npm run startpy```)
+- Deploy: 
+  - ```npm run deploy```
+- Destroy: (removes all objects from AWS)
+  - ```npm run destroy```
+- Clean: 
+  - ```npm run clean``` (removes local temp files)
+
+The Deploy/Destroy commands use the name of the active GitHub branch when creating AWS resources.
+For example, if the active GitHub branch is "feature" and the name of the resource is "template", the resource is named "template_feature". For API gateway domains, it's "feature-template.ashevillenc.gov". Production (or main) branches do not get a prefix/suffix.
