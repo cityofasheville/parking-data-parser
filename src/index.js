@@ -124,7 +124,7 @@ export async function handler(event, context, callback) {
       spaces.decks[i] = garage;
     }
 
-    // await sendToS3(JSON.stringify(spaces), 'spaces.json');
+    await sendToS3(JSON.stringify(spaces), 'spaces.json');
     console.log('City garages JSON: ', JSON.stringify(spaces));
 
     let countyGarages = await getCountyDecks();
