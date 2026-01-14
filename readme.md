@@ -1,95 +1,142 @@
-Parking-data-parser loads the data that Where's Parking reads from the vendor API. It is a Lambda in custom-asheville account that is called once a minute.
+# Parking-data-parser
 
-Where’s Parking is a GitHub pages hosted React app. The app makes a GET request to a static JSON file in an Amazon S3 bucket every 10 seconds to get fresh data.
+## Overview
 
-UI Code: https://github.com/cityofasheville/wheres-parking (its served using AWS Amplify)
+Parking-data-parser is a Lambda function that consolidates and normalizes parking garage data from Buncombe County and City of Asheville. The data is written to a single JSON file that is read by the Where's Parking app. The County data is pulled from their individual JSON files and the City data is pulled from its vendor API.
 
-Where's Parking site: https://wheresparking.ashevillenc.gov
+Parking-data-parser is a Lambda in the custom-asheville account that is triggered once a minute.
 
-AWS S3 bucket: https://s3.amazonaws.com/avl-parking-decks/spaces.json
+The [Where's Parking](https://wheresparking.ashevillenc.gov/) frontend is a React app hosted on AWS Amplify. Visit the [Where's Parking Github repo](https://github.com/cityofasheville/wheres-parking) for more information about the frontend.
 
 It’s embedded in the City’s website here: https://www.ashevillenc.gov/service/find-real-time-parking-in-parking-garages/
 
+## Data Locations
 
+### S3 Bucket
 
+Parking data is output by parking-data-parser to an AWS S3 bucket:
+https://s3.amazonaws.com/avl-parking-decks/
 
-API Key is in secrets manager:
+### Output: Consolidated JSON with all data (all-spaces.json)
 
-{
-"logix_url": "https://api.streetsoncloud.com/pl1/multi-lot-info",
-"logix_apikey": "xxxxx"
-}
+This is produced by the parking-data-parser Lambda function. Note the that the parking-data-parser Lambda function transforms data in the consolidation process to enhance the frontend app.
 
+[https://s3.amazonaws.com/avl-parking-decks/all-spaces.json](https://s3.amazonaws.com/avl-parking-decks/all-spaces.json) (custom-asheville)
 
+#### Shape of data in sll-spaces.json
 
-
-Parking Logix API returns this data:
-https://api.streetsoncloud.com/pl1/multi-lot-info
-``` json
+```json
 [
-    [
-        {
-            "location_name": "The Historic Downtown Parking",
-            "geocode": "(29.898319548148,-81.315417134891)",
-            "location_address": "Visitor Information Center",
-            "total_spaces": "1143",
-            "free_spaces": "938",
-            "occupancy": 18
-        }
-    ]
+  [
+    {
+      "name": "College Street",
+      "slug": "college-street",
+      "address": "164 College St, Asheville, NC 28801",
+      "coords": [35.597220568749506, -82.54918944554281],
+      "available": 175,
+      "url": "https://www.buncombenc.gov/673/Public-Parking",
+      "jurisdiction": "county"
+    }
+  ]
 ]
 ```
 
-This script writes spaces.json to S3 'avl-parking-decks'
-{
-  "decks": [
+### Output: JSON with City-only data (spaces.json)
+
+This is also produced by the parking-data-parser Lambda function for any existing usage that expects spaces.json to include only City garage data. It has some new properties added to match the consolidated JSON file.
+
+[https://s3.amazonaws.com/avl-parking-decks/spaces.json](https://s3.amazonaws.com/avl-parking-decks/spaces.json) (custom-asheville)
+
+#### Shape of data in spaces.json
+
+```json
+[
+  [
     {
-      "name": "Rankin Ave Garage",
-      "available": "106",
-      "coords": [
-        35.596756575901,
-        -82.554218986941
-      ]
-    },
+      "name": "Rankin Avenue",
+      "slug": "rankin-avenue",
+      "address": "12 Rankin Ave, Asheville, NC 28801",
+      "coords": [35.59574383564083, -82.5538445980123],
+      "available": "125",
+      "url": "https://www.ashevillenc.gov/service/park-in-a-parking-garage/",
+      "jurisdiction": "city"
+    }
+  ]
+]
+```
+
+### Input: JSON with raw County data
+
+[https://s3.amazonaws.com/bc-parking-decks/164College](https://s3.amazonaws.com/bc-parking-decks/164College) (enterprise-asheville)
+
+[https://s3.amazonaws.com/bc-parking-decks/40Coxe](https://s3.amazonaws.com/bc-parking-decks/40Coxe) (enterprise-asheville)
+
+#### Shape of County data
+
+```json
+[
+  [
     {
-      "name": "Wall Street Garage",
-      "available": "44",
-      "coords": [
-        35.59461343674,
-        -82.556525862251
-      ]
-    },
-    {
-      "name": "Biltmore Ave.Garage",
-      "available": "156",
-      "coords": [
-        35.592322076548,
-        -82.55143519361
-      ]
-    },
-    {
-      "name": "Harrah's Cherokee Center Garage",
-      "available": "189",
-      "coords": [
-        35.596718496827,
-        -82.554197997403
+      "decks": [
+        {
+          "name": "164 College",
+          "available": 180,
+          "coords": [35.596902, -82.548801]
+        }
       ]
     }
   ]
+]
+```
+
+### Input: City Parking Vendor (Parking Logix)
+
+#### API Key
+
+Stored in AWS secrets manager
+
+```json
+{
+  "logix_url": "https://api.streetsoncloud.com/pl1/multi-lot-info",
+  "logix_apikey": "xxxxx"
 }
+```
+
+#### Parking Logix endpoint
+
+https://api.streetsoncloud.com/pl1/multi-lot-info
+
+#### Shape of Parking Logix data
+
+```json
+[
+  [
+    {
+      "location_name": "The Historic Downtown Parking",
+      "geocode": "(29.898319548148,-81.315417134891)",
+      "location_address": "Visitor Information Center",
+      "total_spaces": "1143",
+      "free_spaces": "938",
+      "occupancy": 18
+    }
+  ]
+]
+```
 
 ## Usage
-First run ```npm install```
 
-```package.json``` has these scripts:
-- Test Locally: 
-  - ```npm start``` (or for a Python program: ```npm run startpy```)
-- Deploy: 
-  - ```npm run deploy```
+First run `npm install`
+
+`package.json` has these scripts:
+
+- Test Locally:
+  - `npm start` (or for a Python program: `npm run startpy`)
+- Deploy:
+  - `npm run deploy`
 - Destroy: (removes all objects from AWS)
-  - ```npm run destroy```
-- Clean: 
-  - ```npm run clean``` (removes local temp files)
+  - `npm run destroy`
+- Clean:
+  - `npm run clean` (removes local temp files)
 
 The Deploy/Destroy commands use the name of the active GitHub branch when creating AWS resources.
 For example, if the active GitHub branch is "feature" and the name of the resource is "template", the resource is named "template_feature". For API gateway domains, it's "feature-template.ashevillenc.gov". Production (or main) branches do not get a prefix/suffix.
