@@ -130,5 +130,5 @@ async function BuildNodeJS(build_dir) {
   await fs.copyFile('../package.json', `${build_dir}/nodejs/package.json`);
   await fs.copyFile('../package-lock.json', `${build_dir}/nodejs/package-lock.json`);
 
-  execSync(`npm install --prefix ${build_dir}/nodejs --omit-dev`, { stdio: 'inherit' });
+  execSync(`npm install --prefix ${build_dir}/nodejs --omit=dev`, { stdio: 'inherit' });
 }
