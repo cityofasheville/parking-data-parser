@@ -147,7 +147,7 @@ async function appendToHistoricalCSV(garageData, timestamp) {
   }
 }
 
-export async function handler(event, context, callback) {
+export async function handler(event, context) {
   // to indicate that a garage is closed, add its slug to this array:
   const CLOSED_GARAGES = [];
 
