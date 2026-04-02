@@ -1,5 +1,6 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import fetch from 'node-fetch';
+import { stringify } from 'csv-stringify/sync';
 import getSecrets from './getSecrets.js';
 
 const s3_client = new S3Client({ region: 'us-east-1' });
@@ -78,6 +79,74 @@ function sortGarages(garage_data) {
   return garage_data;
 }
 
+// Used to capture historical data every 15 minutes
+function shouldCaptureHistoricalData(event = {}) {
+  if (event.forceCsvCapture === true) {
+    return true;
+  }
+  const now = new Date();
+  const minutes = now.getMinutes();
+  return minutes % 15 === 0;
+}
+
+function convertToCSV(garageData, timestamp) {
+  const records = garageData.map((garage) => ({
+    timestamp,
+    garage_slug: garage.slug,
+    available_spaces: garage.available
+  }));
+
+  return stringify(records, {
+    header: true,
+    columns: [
+      'timestamp',
+      'garage_slug',
+      'available_spaces'
+    ],
+  });
+}
+
+async function getExistingCSVFromS3(filename) {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: 'avl-parking-decks',
+      Key: filename,
+    });
+    const response = await s3_client.send(command);
+    const str = await response.Body.transformToString();
+    return str;
+  } catch (err) {
+    if (err.name === 'NoSuchKey') {
+      return null;
+    }
+    throw err;
+  }
+}
+
+async function appendToHistoricalCSV(garageData, timestamp) {
+  try {
+    const date = new Date(timestamp);
+    const dateStr = date.toISOString().split('T')[0];
+    const filename = `parking-history-${dateStr}.csv`;
+
+    const existingData = await getExistingCSVFromS3(filename);
+
+    let finalContent;
+    if (existingData) {
+      const newRows = convertToCSV(garageData, timestamp);
+      const newRowsWithoutHeader = newRows.split('\n').slice(1).join('\n');
+      finalContent = existingData.trimEnd() + '\n' + newRowsWithoutHeader;
+    } else {
+      finalContent = convertToCSV(garageData, timestamp);
+    }
+
+    await sendToS3(finalContent, filename);
+    console.log(`Historical data written to ${filename}`);
+  } catch (err) {
+    console.error('Error writing historical CSV:', err);
+  }
+}
+
 export async function handler(event, context, callback) {
   // to indicate that a garage is closed, add its slug to this array:
   const CLOSED_GARAGES = [];
@@ -133,6 +202,11 @@ export async function handler(event, context, callback) {
 
     await sendToS3(JSON.stringify({ decks: allGarages }), 'all-spaces.json');
     console.log('All garages JSON: ', JSON.stringify({ decks: allGarages }));
+
+    if (shouldCaptureHistoricalData(event)) {
+      const timestamp = new Date().toISOString();
+      await appendToHistoricalCSV(allGarages, timestamp);
+    }
   } catch (error) {
     console.log(error);
   }
