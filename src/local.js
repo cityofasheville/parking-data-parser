@@ -1,6 +1,9 @@
 import {handler} from './index.js';
 
-let event = {};
+// Set forceCsvCapture: true in the event object to test CSV writing regardless of time
+let event = {
+  forceCsvCapture: true
+};
 
 handler(event).then(() => {
     console.log('done');
